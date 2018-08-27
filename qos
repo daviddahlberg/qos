@@ -1,0 +1,194 @@
+#!/bin/sh
+#
+# Copyright (c) 2018 David Dahlberg <dyn+code@dahlberg.cologne>
+#
+# Permission to use, copy, modify, and distribute this software for any
+# purpose with or without fee is hereby granted, provided that the above
+# copyright notice and this permission notice appear in all copies.
+#
+# THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+# WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+# MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
+# ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+# WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
+# ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
+# OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+
+usage () {
+	echo "usage: $(basename $0)" \
+		"value" \
+	echo "value: hexadecimal tos or decimal dscp"
+}
+
+if [ $# -ne 1 ]; then
+	usage >&2
+	exit 1
+fi
+
+value="$1"
+value=$(echo "$value" | tr "[:upper:]" "[:lower:"])
+case "$value" in
+	cs7)	value=56;;
+	cs6)	value=48;;
+	ef)	value=46;;
+	va)	value=44;;
+	cs5)	value=40;;
+	af43)	value=38;;
+	af42)	value=36;;
+	af41)	value=34;;
+	cs4)	value=32;;
+	af33)	value=30;;
+	af32)	value=28;;
+	af31)	value=26;;
+	cs3)	value=24;;
+	af23)	value=22;;
+	af22)	value=20;;
+	af21)	value=18;;
+	cs2)	value=16;;
+	af13)	value=14;;
+	af12)	value=12;;
+	af11)	value=10;;
+	cs1)	value=8;;
+	cs0|df|be)	value=0;;
+	*)	;;
+esac
+
+
+if [ x$(echo $value | cut -b 1-2 ) = "x0x" ]; then
+	tos=$(printf "%i" "$value")
+	ecn=$(( $tos %4 ))
+elif [ $value -ge 0 ] && [ $value -le 63 ]; then
+	tos=$(( $value * 4 ))
+	unset ecn
+else
+	usage
+	exit 1
+fi
+
+## TOS interpretation
+####################################################
+
+printf "===== Type of Service ====\n"
+
+# Print TOS info
+printf "    Binary: "
+printf "%d" $(( $tos / 128 ))
+printf "%d" $(( $tos / 64 % 2 ))
+printf "%d" $(( $tos / 32 % 2 ))
+printf " "
+printf "%d" $(( $tos / 16 % 2 ))
+printf "%d" $(( $tos / 8 % 2 ))
+printf "%d" $(( $tos / 4 % 2 ))
+printf " "
+if [ "$ecn" ]; then
+	printf "%d" $(( $tos / 2 % 2 ))
+	printf "%d\n" $(( $tos % 2 ))
+else
+	printf "xx\n"
+fi
+printf "       Hex: "
+if [ "$ecn" ]; then
+	printf "0x%02x\n"  "$tos"
+else
+	printf "0x%02x-0x%02x\n"  "$tos" "$(($tos+3))"
+fi
+
+# Print IP precedence
+precedence=$(( $tos / 32 ))
+printf "Precedence: "
+case $precedence in
+0)	printf "Routine";;
+1)	printf "Priority";;
+2)	printf "Immediate";;
+3)	printf "Flash";;
+4)	printf "Flash Override";;
+5)	printf "CRITIC/ECP";;
+6)	printf "Internetwork Control";;
+7)	printf "Network Control";; 
+*)	;;
+esac
+printf " (%d)\n" "$precedence"
+
+printf "     Flags: "
+[ z"$(( $tos / 16 % 2 ))" = z1 ] && printf "Low Delay, " \
+	|| printf "Normal Delay, "
+[ z"$(( $tos / 8 % 2 ))" = z1 ] && printf "High Throughput, " \
+	|| printf "Normal Throughput, "
+[ z"$(( $tos / 4 % 2 ))" = z1 ] && printf "High Relibility\n" \
+	|| printf "Normal Relibility\n"
+
+## DSCP/ECN interpretation
+##########################
+
+printf "\n==== Differentiated Services Code Point ====\n"
+
+# Print DSCP info
+dscp=$(( $tos / 4 ))
+printf "       DSCP: %d\n" "$dscp"
+printf "        PHB: "
+case $dscp in
+0)	printf "CS0/DF";;
+8)	printf "CS1";;
+10)	printf "AF11";;
+12)	printf "AF12";;
+14)	printf "AF13";;
+16)	printf "CS2";;
+18)	printf "AF21";;
+20)	printf "AF22";;
+22)	printf "AF23";;
+24)	printf "CS3";;
+26)	printf "AF31";;
+28)	printf "AF32";;
+30)	printf "AF33";;
+32)	printf "CS4";;
+34)	printf "AF41";;
+36)	printf "AF42";;
+38)	printf "AF43";;
+40)	printf "CS5";;
+44)	printf "VA";;
+46)	printf "EF";;
+48)	printf "CS6";;
+56)	printf "CS7";;
+*)	;;
+esac
+if [ z"$(($dscp%2))" = z1 ]; then
+	printf "EXP/LU"
+fi
+printf "\n"
+
+printf "         TA: "
+case $dscp in
+48)			printf "Network Control (CS)\n";;
+46|40|34|36|38|32|24)	printf "Real-Time (EF)\n";;
+16|26|18|10)		printf "Assured Elastic 1 (AF)\n";;
+28|20|12)		printf "Assured Elastic 2 (AF)\n";;
+30|22|14)		printf "Assured Elastic 3 (AF)\n";;
+0)			printf "Elastic 1 (Default)\n";;
+8)			printf "Elastic 2 (Default)\n";;
+*)			printf "none\n";;
+esac
+
+printf "Intercon TA: "
+case $dscp in
+46|44)	printf "Telephony Service\n";;
+34)	printf "Bulk Realtime\n";;
+36|38)	printf "(Bulk Realtime)\n";;
+26)	printf "Assured Elastic 1\n";;
+28)	printf "Assured Elastic 2\n";;
+30)	printf "(Assured Elastic)\n";;
+0)	printf "Default/Elastic\n";;
+*)	printf "none\n";;
+esac
+
+# Print ECT info
+if [ "$ecn" ]; then
+	printf "\n==== Explicit Congestion Notification ====\n"
+	printf "ECN: "
+	case $ecn in
+	0)	echo "Not-ECN";;
+	1)	echo "ECT(1)";;
+	2)	echo "ECT(0)";;
+	3)	echo "CE";;
+	*)	;;
+	esac
+fi

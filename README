@@ -1,0 +1,31 @@
+QOS(1)                      General Commands Manual                     QOS(1)
+
+NNAAMMEE
+     qqooss – show infos about dscp and tos values
+
+SSYYNNOOPPSSIISS
+     qqooss _v_a_l_u_e
+
+DDEESSCCRRIIPPTTIIOONN
+     qqooss decodes dscp and tos values and converts values between the different
+     interpretations and encodings.
+
+     The following options are available:
+
+     _v_a_l_u_e   The argument _v_a_l_u_e can either be a TOS value in hexadecimal
+             notation (0xb8), a DSCP value in decimal notation (46) or an
+             IANA-registered codepoint name (EF).
+
+EEXXIITT SSTTAATTUUSS
+     The qqooss utility exits 0 on success, and >0 if an error occurs.
+
+EEXXAAMMPPLLEESS
+           $ qos 0xb8
+
+HHIISSTTOORRYY
+     The qqooss utility has been available since 2018.
+
+AAUUTTHHOORRSS
+     David Dahlberg <_d_y_n_+_c_o_d_e_@_d_a_h_l_b_e_r_g_._c_o_l_o_g_n_e>
+
+OpenBSD 6.4                      May 25, 2018                      OpenBSD 6.4
