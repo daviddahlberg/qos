@@ -18,7 +18,7 @@ SHAREDIR = $(PREFIX)/share
 MANDIR   = $(PREFIX)/man
 
 all:
-	mandoc -Wall,stop -Tascii qos.1 > README
+	mandoc -Wall,stop -Tmarkdown qos.1 > README.md
 
 install:
 	install -D -m 755 qos $(BINDIR)
