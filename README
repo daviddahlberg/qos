@@ -1,7 +1,7 @@
 QOS(1)                      General Commands Manual                     QOS(1)
 
 NNAAMMEE
-     qqooss – show infos about dscp and tos values
+     qqooss - show infos about dscp and tos values
 
 SSYYNNOOPPSSIISS
      qqooss _v_a_l_u_e
@@ -17,7 +17,7 @@ DDEESSCCRRIIPPTTIIOONN
              IANA-registered codepoint name (EF).
 
 EEXXIITT SSTTAATTUUSS
-     The qqooss utility exits 0 on success, and >0 if an error occurs.
+     The qqooss utility exits 0 on success, and >0 if an error occurs.
 
 EEXXAAMMPPLLEESS
            $ qos 0xb8
