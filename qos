@@ -114,7 +114,7 @@ printf "     Flags: "
 	|| printf "Normal Delay, "
 [ z"$(( $tos / 8 % 2 ))" = z1 ] && printf "High Throughput, " \
 	|| printf "Normal Throughput, "
-[ z"$(( $tos / 4 % 2 ))" = z1 ] && printf "High Relibility\n" \
+[ z"$(( $tos / 4 % 2 ))" = z1 ] && printf "High Reliability\n" \
 	|| printf "Normal Relibility\n"
 
 ## DSCP/ECN interpretation
